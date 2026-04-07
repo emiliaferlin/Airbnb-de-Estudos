@@ -1,4 +1,4 @@
-# Plataforma de Estudos Colaborativos
+# Plataforma de Estudos Colaborativos(Match dos Estudos)
 
 ## 1. Problema
 Pessoas desejam estudar em conjunto, mas enfrentam dificuldades para encontrar parceiros com interesses, níveis e horários compatíveis.
