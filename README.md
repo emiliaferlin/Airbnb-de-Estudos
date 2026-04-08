@@ -52,11 +52,11 @@ Representa a compatibilidade entre usuários com base em seus perfis.
 
 ---
 
-### 4.3 Matches
+### 4.3 Matchs
 
 | Método | Rota      | Descrição                          |
 |--------|----------|------------------------------------|
-| GET    | /matches | Lista usuários compatíveis          |
+| GET    | /matchs | Lista usuários compatíveis          |
 
 ---
 
