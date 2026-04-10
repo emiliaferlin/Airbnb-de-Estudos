@@ -11,6 +11,7 @@ import (
 )
 
 // ---------- Perfil ----------
+
 type PerfilController struct {
 	service *service.PerfilService
 }
@@ -72,6 +73,7 @@ func (pc *PerfilController) DeletePerfil(c *gin.Context) {
 }
 
 // ---------- Sessao ----------
+
 type SessaoController struct {
 	service *service.SessaoService
 }
@@ -133,6 +135,7 @@ func (pcs *SessaoController) DeleteSessao(c *gin.Context) {
 }
 
 // ---------- Match ----------
+
 type MatchController struct {
 	service *service.MatchService
 }
@@ -141,6 +144,8 @@ func NewMatchController(service *service.MatchService) *MatchController {
 	return &MatchController{service: service}
 }
 
+// POST /matches
+// Body: { "perfilId": 1, "sessaoId": 2 }
 // Calcula o score entre o perfil e a sessão e retorna se o match foi aprovado.
 func (mc *MatchController) CreateMatch(c *gin.Context) {
 	var match model.Match
@@ -159,6 +164,7 @@ func (mc *MatchController) CreateMatch(c *gin.Context) {
 	c.JSON(status, resultado)
 }
 
+// GET /perfis/:id/matches
 // Retorna todos os matches aprovados do perfil com o id informado.
 func (mc *MatchController) GetMatchesByPerfil(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))

@@ -8,6 +8,7 @@ import (
 )
 
 // ---------- Perfil ----------
+
 type PerfilService struct {
 	repo *repository.PerfilRepository
 }
@@ -33,6 +34,7 @@ func (s *PerfilService) Delete(id int) []model.Perfil {
 }
 
 // ---------- Sessao ----------
+
 type SessaoService struct {
 	repo *repository.SessaoRepository
 }
@@ -58,10 +60,11 @@ func (s *SessaoService) Delete(id int) []model.Sessao {
 }
 
 // ---------- Match ----------
+
 type MatchService struct {
-	repo       *repository.MatchRepository
-	repoPerfil *repository.PerfilRepository
-	repoSessao *repository.SessaoRepository
+	repo        *repository.MatchRepository
+	repoPerfil  *repository.PerfilRepository
+	repoSessao  *repository.SessaoRepository
 }
 
 func NewMatchService(
@@ -81,7 +84,7 @@ func NewMatchService(
 //   - Mesma disciplina  → 40 pts
 //   - Mesmo nível       → 30 pts
 //   - Mesmo estilo      → 30 pts
-//     Total máximo: 100 pts  |  Aprovado se score >= 60
+//   Total máximo: 100 pts  |  Aprovado se score >= 60
 func calcularScore(p model.Perfil, s model.Sessao) int {
 	score := 0
 	if strings.EqualFold(p.Disciplina, s.Disciplina) {
