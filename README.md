@@ -16,15 +16,15 @@ O **Match dos Estudos** é uma API REST que permite cadastrar perfis de estudant
 
 ### Entidades do Domínio
 
-| Entidade | Descrição                                                                                                              |
-| -------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `Perfil` | Representa as preferências e características acadêmicas de um estudante: disciplina, nível e estilo de estudo          |
-| `Sessao` | Define uma sessão de estudo organizada, com título, disciplina, nível, estilo, data/hora, duração e vagas              |
-| `Match`  | Representa o resultado da compatibilidade calculada entre um perfil e uma sessão, contendo score e status de aprovação |
+| Entidade | Descrição                                                                                      |
+| -------- | ---------------------------------------------------------------------------------------------- |
+| `Perfil` | Características acadêmicas do estudante: disciplina, nível e estilo de estudo                  |
+| `Sessao` | Sessão de estudo organizada, com título, disciplina, nível, estilo, data/hora, duração e vagas |
+| `Match`  | Resultado da compatibilidade entre um perfil e uma sessão: score e status de aprovação         |
 
 ### Algoritmo de Match
 
-O score é calculado comparando os campos de um `Perfil` com os de uma `Sessao`. O match é **aprovado** quando o score atinge **60 pontos ou mais**.
+O score compara os campos de um `Perfil` com os de uma `Sessao`. Match **aprovado** quando score ≥ 60.
 
 | Critério                    | Pontos  |
 | --------------------------- | ------- |
@@ -39,8 +39,8 @@ O score é calculado comparando os campos de um `Perfil` com os de uma `Sessao`.
 
 ### Pré-requisitos
 
-- [Go 1.21+](https://go.dev/dl/) instalado
-- Git instalado
+- [Go 1.21+](https://go.dev/dl/)
+- [Docker](https://www.docker.com/) e Docker Compose
 
 ### Passos
 
@@ -49,29 +49,86 @@ O score é calculado comparando os campos de um `Perfil` com os de uma `Sessao`.
 git clone https://github.com/emiliaferlin/Match-dos-Estudos.git
 cd Match-dos-Estudos
 
-# 2. Instale as dependências
+# 2. Suba o banco de dados MongoDB
+docker-compose up -d
+
+# 3. Instale as dependências Go
 go mod tidy
 
-# 3. Execute o servidor
+# 4. Execute o servidor
 go run ./src/main.go
 ```
 
 O servidor iniciará em `http://localhost:8080`.
 
+> **Ao iniciar**, o servidor conecta ao MongoDB e executa o **seed automático**, inserindo 5 perfis, 5 sessões e 6 matches de exemplo — caso as coleções ainda estejam vazias.
+
+### Parar o banco
+
+```bash
+docker-compose down
+```
+
 ---
 
-## 3. Tabela de Rotas da API
+## 3. Banco de Dados — MongoDB
 
-### 3.1 Perfis
+### Por que MongoDB?
 
-| Método   | Rota          | Descrição                         | Status de sucesso |
-| -------- | ------------- | --------------------------------- | ----------------- |
-| `GET`    | `/perfis`     | Lista todos os perfis cadastrados | 200               |
-| `POST`   | `/perfis`     | Cria um novo perfil               | 201               |
-| `PUT`    | `/perfis/:id` | Atualiza um perfil existente      | 200               |
-| `DELETE` | `/perfis/:id` | Remove um perfil pelo ID          | 200               |
+O projeto usa o **MongoDB** como banco de dados NoSQL, com o driver oficial **`mongo-driver/v2`** como ODM (Object-Document Mapper), já presente no `go.mod`. O MongoDB se adequa bem ao domínio por:
 
-**Exemplo de body — POST/PUT `/perfis`:**
+- Documentos JSON/BSON espelham diretamente as structs Go, sem necessidade de mapeamento relacional complexo
+- Flexibilidade de schema permite evoluir os campos de Perfil e Sessao sem migrações
+- Consultas por campos arbitrários (como `perfilId + aprovado`) são simples e eficientes
+
+### Mapeamento (ODM) com `mongo-driver/v2`
+
+As structs do pacote `model` usam **tags `bson`** para mapear campos Go ↔ MongoDB:
+
+```go
+type Perfil struct {
+    ID         int    `json:"id"         bson:"_id"`
+    Nome       string `json:"nome"       bson:"nome"`
+    Disciplina string `json:"disciplina" bson:"disciplina"`
+    Nivel      string `json:"nivel"      bson:"nivel"`
+    Estilo     string `json:"estilo"     bson:"estilo"`
+}
+```
+
+O campo `_id` é a chave primária do MongoDB. O projeto usa IDs inteiros auto-incrementais para manter compatibilidade com as rotas REST (ex: `/perfis/1`).
+
+### Coleções
+
+| Coleção   | Descrição                                  |
+| --------- | ------------------------------------------ |
+| `perfis`  | Documentos de `Perfil`                     |
+| `sessoes` | Documentos de `Sessao`                     |
+| `matches` | Documentos de `Match` com score e aprovado |
+
+### Seed de dados
+
+O arquivo `src/database/seed.go` popula automaticamente as coleções na primeira execução:
+
+| Coleção   | Registros de exemplo                                                           |
+| --------- | ------------------------------------------------------------------------------ |
+| `perfis`  | 5 perfis (Ana, Bruno, Carla, Diego, Emilia) com disciplinas e estilos variados |
+| `sessoes` | 5 sessões (Algoritmos, Banco de Dados, Redes) em diferentes níveis             |
+| `matches` | 6 matches pré-calculados demonstrando resultados aprovados e reprovados        |
+
+---
+
+## 4. Tabela de Rotas da API
+
+### 4.1 Perfis
+
+| Método   | Rota          | Descrição             | Status |
+| -------- | ------------- | --------------------- | ------ |
+| `GET`    | `/perfis`     | Lista todos os perfis | 200    |
+| `POST`   | `/perfis`     | Cria um novo perfil   | 201    |
+| `PUT`    | `/perfis/:id` | Atualiza um perfil    | 200    |
+| `DELETE` | `/perfis/:id` | Remove um perfil      | 200    |
+
+**Body — POST/PUT `/perfis`:**
 
 ```json
 {
@@ -83,18 +140,16 @@ O servidor iniciará em `http://localhost:8080`.
 }
 ```
 
----
+### 4.2 Sessões
 
-### 3.2 Sessões
+| Método   | Rota           | Descrição              | Status |
+| -------- | -------------- | ---------------------- | ------ |
+| `GET`    | `/sessoes`     | Lista todas as sessões | 200    |
+| `POST`   | `/sessoes`     | Cria uma nova sessão   | 201    |
+| `PUT`    | `/sessoes/:id` | Atualiza uma sessão    | 200    |
+| `DELETE` | `/sessoes/:id` | Remove uma sessão      | 200    |
 
-| Método   | Rota           | Descrição                          | Status de sucesso |
-| -------- | -------------- | ---------------------------------- | ----------------- |
-| `GET`    | `/sessoes`     | Lista todas as sessões disponíveis | 200               |
-| `POST`   | `/sessoes`     | Cria uma nova sessão de estudo     | 201               |
-| `PUT`    | `/sessoes/:id` | Atualiza uma sessão existente      | 200               |
-| `DELETE` | `/sessoes/:id` | Remove uma sessão pelo ID          | 200               |
-
-**Exemplo de body — POST/PUT `/sessoes`:**
+**Body — POST/PUT `/sessoes`:**
 
 ```json
 {
@@ -102,22 +157,20 @@ O servidor iniciará em `http://localhost:8080`.
   "disciplina": "Algoritmos",
   "nivel": "conhecimento médio",
   "estilo": "gosta de argumentar",
-  "dataHoraInicio": "2026-04-08T19:00:00",
-  "duracaoMinutos": 120,
-  "vagas": 5
+  "dataHoraInicio": "2026-04-15T19:00:00",
+  "duracaoMinutos": 90,
+  "vagas": 4
 }
 ```
 
----
+### 4.3 Matches
 
-### 3.3 Matches
+| Método | Rota                  | Descrição                             | Status |
+| ------ | --------------------- | ------------------------------------- | ------ |
+| `POST` | `/matches`            | Calcula o score entre perfil e sessão | 201    |
+| `GET`  | `/perfis/:id/matches` | Lista matches aprovados do perfil     | 200    |
 
-| Método | Rota                  | Descrição                                                           | Status de sucesso |
-| ------ | --------------------- | ------------------------------------------------------------------- | ----------------- |
-| `POST` | `/matches`            | Calcula o score entre um perfil e uma sessão e retorna o resultado  | 201               |
-| `GET`  | `/perfis/:id/matches` | Retorna todos os matches **aprovados** do perfil com o ID informado | 200               |
-
-**Exemplo de body — POST `/matches`:**
+**Body — POST `/matches`:**
 
 ```json
 {
@@ -126,62 +179,40 @@ O servidor iniciará em `http://localhost:8080`.
 }
 ```
 
-**Exemplo de resposta — POST `/matches` (aprovado):**
+**Resposta — POST `/matches` (aprovado):**
 
 ```json
-{
-  "id": 1,
-  "perfilId": 1,
-  "sessaoId": 2,
-  "score": 70,
-  "aprovado": true
-}
+{ "id": 7, "perfilId": 1, "sessaoId": 1, "score": 100, "aprovado": true }
 ```
 
-**Exemplo de resposta — POST `/matches` (reprovado):**
+**Resposta — GET `/perfis/1/matches`:**
 
 ```json
-{
-  "id": 2,
-  "perfilId": 1,
-  "sessaoId": 3,
-  "score": 40,
-  "aprovado": false
-}
-```
-
-**Exemplo de resposta — GET `/perfis/1/matches`:**
-
-```json
-[
-  {
-    "id": 1,
-    "perfilId": 1,
-    "sessaoId": 2,
-    "score": 70,
-    "aprovado": true
-  }
-]
+[{ "id": 1, "perfilId": 1, "sessaoId": 1, "score": 100, "aprovado": true }]
 ```
 
 ---
 
-## 4. Estrutura do Projeto
+## 5. Estrutura do Projeto
 
 ```
 Match-dos-Estudos/
+├── docker-compose.yml           # Sobe o MongoDB na porta 27017
 ├── src/
-│   ├── main.go              # Ponto de entrada — inicia o servidor Gin
+│   ├── main.go                  # Inicializa banco, seed e servidor
+│   ├── database/
+│   │   ├── connection.go        # Conexão com MongoDB
+│   │   └── seed.go              # Dados de exemplo (inserção idempotente)
 │   ├── router/
-│   │   └── router.go        # Registro de todas as rotas e injeção de dependências
+│   │   └── router.go            # Registro de rotas e injeção de dependências
 │   ├── controller/
-│   │   └── controller.go    # Handlers HTTP (Perfil, Sessao, Match)
+│   │   └── controller.go        # Handlers HTTP
 │   ├── service/
-│   │   └── service.go       # Regras de negócio e algoritmo de score do match
+│   │   └── service.go           # Regras de negócio e algoritmo de score
 │   ├── repository/
-│   │   └── repository.go    # Persistência em memória (Perfil, Sessao, Match)
+│   │   └── repository.go        # Acesso ao MongoDB (ODM com bson tags)
 │   └── model/
-│       └── model.go         # Structs: Perfil, Sessao, Match
+│       └── model.go             # Structs com tags json e bson
 ├── go.mod
 ├── go.sum
 └── README.md
@@ -189,56 +220,50 @@ Match-dos-Estudos/
 
 ---
 
-## 5. Exemplos de Uso (fluxo completo)
+## 6. Exemplos de Uso
 
 ```bash
-# 1. Criar um perfil
+# Listar perfis (já populados pelo seed)
+curl http://localhost:8080/perfis
+
+# Criar novo perfil
 curl -X POST http://localhost:8080/perfis \
   -H "Content-Type: application/json" \
-  -d '{"nome":"Ana","idade":22,"disciplina":"Algoritmos","nivel":"conhecimento médio","estilo":"gosta de argumentar"}'
+  -d '{"nome":"João","idade":24,"disciplina":"Redes","nivel":"conhecimento médio","estilo":"mais silencioso"}'
 
-# 2. Criar uma sessão
-curl -X POST http://localhost:8080/sessoes \
-  -H "Content-Type: application/json" \
-  -d '{"titulo":"Revisão","disciplina":"Algoritmos","nivel":"conhecimento médio","estilo":"gosta de argumentar","dataHoraInicio":"2026-04-10T19:00:00","duracaoMinutos":90,"vagas":4}'
-
-# 3. Calcular o match (perfilId=1, sessaoId=1)
+# Calcular match entre perfil 1 e sessão 1
 curl -X POST http://localhost:8080/matches \
   -H "Content-Type: application/json" \
   -d '{"perfilId":1,"sessaoId":1}'
 
-# 4. Ver matches aprovados do perfil 1
+# Ver matches aprovados do perfil 1
 curl http://localhost:8080/perfis/1/matches
 ```
 
 ---
 
-## 6. Pesquisa e Contextualização
+## 7. Pesquisa e Contextualização
 
-### 6.1 Contexto e Motivação
+### 7.1 Contexto e Motivação
 
-A aprendizagem colaborativa é amplamente reconhecida na literatura educacional como uma estratégia eficaz para o desenvolvimento de competências técnicas e interpessoais. Quando estudantes trabalham juntos em problemas desafiadores, tendem a consolidar o conhecimento com mais profundidade, identificar lacunas no próprio raciocínio e desenvolver habilidades de comunicação e argumentação.
+A aprendizagem colaborativa é amplamente reconhecida na literatura educacional como uma estratégia eficaz para o desenvolvimento de competências técnicas e interpessoais. Quando estudantes trabalham juntos, tendem a consolidar o conhecimento com mais profundidade, identificar lacunas no próprio raciocínio e desenvolver habilidades de comunicação.
 
-Contudo, a formação espontânea de grupos de estudo esbarra em um problema prático: **a dificuldade de encontrar parceiros com perfis compatíveis**. Incompatibilidades de nível de conhecimento (um estudante avançado com um iniciante) ou de estilo (alguém que prefere silêncio com alguém que aprende debatendo) comprometem a experiência de ambos.
+Contudo, a formação espontânea de grupos esbarra em um problema prático: a dificuldade de encontrar parceiros com perfis compatíveis. Incompatibilidades de nível (avançado com iniciante) ou de estilo (silencioso com debatedor) comprometem a experiência de todos.
 
-### 6.2 Matchmaking Aplicado à Educação
+### 7.2 Matchmaking Aplicado à Educação
 
-Sistemas de _matchmaking_ — algoritmos que calculam compatibilidade entre perfis — são amplamente utilizados em plataformas de recrutamento (LinkedIn, Gupy), relacionamentos (Tinder) e jogos online. O princípio central é o mesmo: atribuir pesos a critérios relevantes e calcular uma pontuação de compatibilidade.
+Sistemas de _matchmaking_ — algoritmos de compatibilidade — são amplamente usados em recrutamento (LinkedIn), relacionamentos (Tinder) e jogos online. O princípio é atribuir pesos a critérios relevantes e calcular uma pontuação. Aqui, o algoritmo foi adaptado para o domínio educacional com três critérios: disciplina, nível e estilo. O threshold de 60 pontos exige compatibilidade em pelo menos dois dos três critérios, filtrando matches superficiais.
 
-Neste projeto, o algoritmo foi adaptado para o domínio educacional com três critérios principais: disciplina de interesse, nível de conhecimento e estilo de aprendizagem. O threshold de aprovação (60 pontos) foi definido para exigir compatibilidade em pelo menos dois dos três critérios, garantindo que matches superficiais sejam filtrados.
+### 7.3 Escolha Tecnológica
 
-### 6.3 Escolha Tecnológica — Go + Gin
+**Go + Gin**: compilação nativa com alto throughput, tipagem estática e framework HTTP eficiente, adequado para APIs REST com múltiplas requisições simultâneas.
 
-A linguagem **Go (Golang)** foi escolhida pelas seguintes características:
+**MongoDB + mongo-driver/v2**: banco NoSQL orientado a documentos. As structs Go mapeiam diretamente para documentos BSON sem camadas de ORM relacionais. O driver oficial `mongo-driver/v2` atua como ODM via tags `bson`, oferecendo operações como `FindOne`, `Find`, `InsertOne`, `FindOneAndUpdate` e `DeleteOne` com tipagem forte.
 
-- **Performance**: compilação para código nativo com alto throughput em servidores HTTP, adequado para APIs com múltiplas requisições simultâneas.
-- **Tipagem estática**: reduz erros em tempo de execução e facilita a manutenção.
-- **Concorrência nativa**: o modelo de goroutines é eficiente para processar requisições paralelas sem overhead de threads.
-- **Ecossistema maduro para APIs**: o framework **Gin** oferece roteamento eficiente, binding de JSON e middleware com sintaxe enxuta.
+A arquitetura em camadas (Router → Controller → Service → Repository) isola o acesso ao banco na camada Repository, facilitando a manutenção e possibilitando trocar o banco sem afetar as demais camadas.
 
-A arquitetura em camadas (Router → Controller → Service → Repository) foi adotada para separar responsabilidades, facilitando testes unitários de cada camada e a substituição futura da persistência em memória por um banco de dados real (como PostgreSQL ou MongoDB, já presente no `go.mod`).
+### 7.4 Possíveis Evoluções
 
-### 6.4 Possíveis Evoluções
-
-- Endpoint de sugestão automática: dado um perfilId, retornar as sessões com maior score
+- Endpoint de sugestão automática: dado um `perfilId`, retornar as sessões com maior score
+- Critério adicional de compatibilidade de horário
 - Notificação ao criador da sessão quando um match aprovado ocorrer
