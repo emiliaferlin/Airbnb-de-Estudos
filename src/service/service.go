@@ -56,3 +56,21 @@ func (s *SessaoService) Update(id int, sessao model.Sessao) model.Sessao {
 func (s *SessaoService) Delete(id int) []model.Sessao {
 	return s.repo.Delet(id)
 }
+
+type MatchService struct {
+	repo *repository.MatchRepository
+}
+
+func NewMatchService(repo *repository.MatchRepository) *MatchService {
+	return &MatchService{
+		repo: repo,
+	}
+}
+
+func (s *MatchService) GetAll() []model.Match {
+	return s.repo.FindAll()
+}
+
+func (s *MatchService) Create(match model.Match) model.Match {
+	return s.repo.Save(match)
+}

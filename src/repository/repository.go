@@ -95,3 +95,23 @@ func (r *SessaoRepository) Delet(id int) []model.Sessao {
 	}
 	return []model.Sessao{}
 }
+
+type MatchRepository struct {
+	matchs []model.Match
+}
+
+func NewMatchRepository() *MatchRepository {
+	return &MatchRepository{
+		matchs: []model.Match{},
+	}
+}
+
+func (r *MatchRepository) FindAll() []model.Match {
+	return r.matchs
+}
+
+func (r *MatchRepository) Save(match model.Match) model.Match {
+	match.ID = len(r.matchs) + 1
+	r.matchs = append(r.matchs, match)
+	return match
+}

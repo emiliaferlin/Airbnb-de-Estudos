@@ -21,6 +21,10 @@ func SetupRouter() *gin.Engine {
 	serviceSessao := service.NewSessaoService(repoSessao)
 	controllerSessao := controller.NewSessaoController(serviceSessao)
 
+	repoMatch := repository.NewMatchRepository()
+	serviceMatch := service.NewMatchService(repoMatch)
+	controllerMatch := controller.NewMatchController(serviceMatch)
+
 	//PERFIL
 	r.GET("/perfis", controllerPerfin.GetPerfis)
 	r.POST("/perfis", controllerPerfin.CreatePerfil)
@@ -34,7 +38,8 @@ func SetupRouter() *gin.Engine {
 	r.DELETE("/sessoes/:id", controllerSessao.DeleteSessao)
 
 	// //MATCH
-	// r.GET("/matches", controller.GetPerfis)
+	r.POST("/matches", controllerMatch.CreateMatch)
+	r.GET("perfis/:id/matches", controllerMatch.GetMatch)
 
 	return r
 }

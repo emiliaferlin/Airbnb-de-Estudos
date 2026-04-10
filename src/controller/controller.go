@@ -159,3 +159,35 @@ func (pcs *SessaoController) DeleteSessao(c *gin.Context) {
 
 	c.JSON(200, "Sessao removido com sucesso!")
 }
+
+type MatchController struct {
+	service *service.MatchService
+}
+
+func NewMatchController(service *service.MatchService) *MatchController {
+	return &MatchController{
+		service: service,
+	}
+}
+
+func (pcs *MatchController) GetMatch(c *gin.Context) {
+	matchs := pcs.service.GetAll()
+	c.JSON(http.StatusOK, matchs)
+}
+
+func (pcs *MatchController) CreateMatch(c *gin.Context) {
+	var match model.Match
+
+	if err := c.ShouldBindJSON(&match); err != nil {
+		c.JSON(400, gin.H{"erro": err.Error()})
+		return
+	}
+
+	resultado := pcs.service.Create(match)
+	if resultado.ID == 0 {
+		c.JSON(400, gin.H{"erro": "Não foi possível criar esse Sessão!"})
+		return
+	}
+
+	c.JSON(201, "Sessão criado com sucesso!")
+}
