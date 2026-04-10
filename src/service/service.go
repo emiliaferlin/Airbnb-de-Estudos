@@ -30,3 +30,29 @@ func (s *PerfilService) Update(id int, perfil model.Perfil) model.Perfil {
 func (s *PerfilService) Delete(id int) []model.Perfil {
 	return s.repo.Delet(id)
 }
+
+type SessaoService struct {
+	repo *repository.SessaoRepository
+}
+
+func NewSessaoService(repo *repository.SessaoRepository) *SessaoService {
+	return &SessaoService{
+		repo: repo,
+	}
+}
+
+func (s *SessaoService) GetAll() []model.Sessao {
+	return s.repo.FindAll()
+}
+
+func (s *SessaoService) Create(sessao model.Sessao) model.Sessao {
+	return s.repo.Save(sessao)
+}
+
+func (s *SessaoService) Update(id int, sessao model.Sessao) model.Sessao {
+	return s.repo.Updat(id, sessao)
+}
+
+func (s *SessaoService) Delete(id int) []model.Sessao {
+	return s.repo.Delet(id)
+}

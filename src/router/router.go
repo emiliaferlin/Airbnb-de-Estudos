@@ -13,21 +13,25 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	repo := repository.NewPerfilRepository()
-	service := service.NewPerfilService(repo)
-	controller := controller.NewPerfilController(service)
+	repoPerfil := repository.NewPerfilRepository()
+	servicePerfil := service.NewPerfilService(repoPerfil)
+	controllerPerfin := controller.NewPerfilController(servicePerfil)
+
+	repoSessao := repository.NewSessaoRepository()
+	serviceSessao := service.NewSessaoService(repoSessao)
+	controllerSessao := controller.NewSessaoController(serviceSessao)
 
 	//PERFIL
-	r.GET("/perfis", controller.GetPerfis)
-	r.POST("/perfis", controller.CreatePerfil)
-	r.PUT("/perfis/:id", controller.UpdatePerfil)
-	r.DELETE("/perfis/:id", controller.DeletePerfil)
+	r.GET("/perfis", controllerPerfin.GetPerfis)
+	r.POST("/perfis", controllerPerfin.CreatePerfil)
+	r.PUT("/perfis/:id", controllerPerfin.UpdatePerfil)
+	r.DELETE("/perfis/:id", controllerPerfin.DeletePerfil)
 
 	// //SESSOES
-	// r.GET("/perfis", controller.GetPerfis)
-	// r.POST("/perfis", controller.GetPerfis)
-	// r.PUT("/perfis/:id", controller.GetPerfis)
-	// r.DELETE("/perfis/:id", controller.GetPerfis)
+	r.GET("/sessoes", controllerSessao.GetSessao)
+	r.POST("/sessoes", controllerSessao.CreateSessao)
+	r.PUT("/sessoes/:id", controllerSessao.UpdateSessao)
+	r.DELETE("/sessoes/:id", controllerSessao.DeleteSessao)
 
 	// //MATCH
 	// r.GET("/matches", controller.GetPerfis)
