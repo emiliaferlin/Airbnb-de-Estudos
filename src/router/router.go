@@ -8,38 +8,42 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//Router → Controller → Service → DAO (ou Repository)
+// Router → Controller → Service → Repository
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
+	// Repositórios
 	repoPerfil := repository.NewPerfilRepository()
-	servicePerfil := service.NewPerfilService(repoPerfil)
-	controllerPerfin := controller.NewPerfilController(servicePerfil)
-
 	repoSessao := repository.NewSessaoRepository()
-	serviceSessao := service.NewSessaoService(repoSessao)
-	controllerSessao := controller.NewSessaoController(serviceSessao)
-
 	repoMatch := repository.NewMatchRepository()
-	serviceMatch := service.NewMatchService(repoMatch)
+
+	// Services
+	servicePerfil := service.NewPerfilService(repoPerfil)
+	serviceSessao := service.NewSessaoService(repoSessao)
+	// MatchService recebe os três repos para calcular o score internamente
+	serviceMatch := service.NewMatchService(repoMatch, repoPerfil, repoSessao)
+
+	// Controllers
+	controllerPerfil := controller.NewPerfilController(servicePerfil)
+	controllerSessao := controller.NewSessaoController(serviceSessao)
 	controllerMatch := controller.NewMatchController(serviceMatch)
 
-	//PERFIL
-	r.GET("/perfis", controllerPerfin.GetPerfis)
-	r.POST("/perfis", controllerPerfin.CreatePerfil)
-	r.PUT("/perfis/:id", controllerPerfin.UpdatePerfil)
-	r.DELETE("/perfis/:id", controllerPerfin.DeletePerfil)
+	// PERFIL
+	r.GET("/perfis", controllerPerfil.GetPerfis)
+	r.POST("/perfis", controllerPerfil.CreatePerfil)
+	r.PUT("/perfis/:id", controllerPerfil.UpdatePerfil)
+	r.DELETE("/perfis/:id", controllerPerfil.DeletePerfil)
 
-	// //SESSOES
+	// SESSOES
 	r.GET("/sessoes", controllerSessao.GetSessao)
 	r.POST("/sessoes", controllerSessao.CreateSessao)
 	r.PUT("/sessoes/:id", controllerSessao.UpdateSessao)
 	r.DELETE("/sessoes/:id", controllerSessao.DeleteSessao)
 
-	// //MATCH
+	// MATCH
 	r.POST("/matches", controllerMatch.CreateMatch)
-	r.GET("perfis/:id/matches", controllerMatch.GetMatch)
+	r.GET("/perfis/:id/matches", controllerMatch.GetMatchesByPerfil)
 
 	return r
 }

@@ -21,8 +21,9 @@ type Sessao struct {
 }
 
 type Match struct {
-	ID       int `json:"id"`
-	PerfilID int `json:"perfilId"`
-	SessaoID int `json:"sessaoId"`
-	Score    int `json:"score"`
+	ID       int  `json:"id"`
+	PerfilID int  `json:"perfilId"`
+	SessaoID int  `json:"sessaoId"`
+	Score    int  `json:"score"`
+	Aprovado bool `json:"aprovado"`
 }

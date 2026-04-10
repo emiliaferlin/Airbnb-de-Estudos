@@ -1,18 +1,19 @@
 package service
 
 import (
+	"strings"
+
 	"match-dos-estudos/src/model"
 	"match-dos-estudos/src/repository"
 )
 
+// ---------- Perfil ----------
 type PerfilService struct {
 	repo *repository.PerfilRepository
 }
 
 func NewPerfilService(repo *repository.PerfilRepository) *PerfilService {
-	return &PerfilService{
-		repo: repo,
-	}
+	return &PerfilService{repo: repo}
 }
 
 func (s *PerfilService) GetAll() []model.Perfil {
@@ -31,14 +32,13 @@ func (s *PerfilService) Delete(id int) []model.Perfil {
 	return s.repo.Delet(id)
 }
 
+// ---------- Sessao ----------
 type SessaoService struct {
 	repo *repository.SessaoRepository
 }
 
 func NewSessaoService(repo *repository.SessaoRepository) *SessaoService {
-	return &SessaoService{
-		repo: repo,
-	}
+	return &SessaoService{repo: repo}
 }
 
 func (s *SessaoService) GetAll() []model.Sessao {
@@ -57,20 +57,80 @@ func (s *SessaoService) Delete(id int) []model.Sessao {
 	return s.repo.Delet(id)
 }
 
+// ---------- Match ----------
 type MatchService struct {
-	repo *repository.MatchRepository
+	repo       *repository.MatchRepository
+	repoPerfil *repository.PerfilRepository
+	repoSessao *repository.SessaoRepository
 }
 
-func NewMatchService(repo *repository.MatchRepository) *MatchService {
+func NewMatchService(
+	repo *repository.MatchRepository,
+	repoPerfil *repository.PerfilRepository,
+	repoSessao *repository.SessaoRepository,
+) *MatchService {
 	return &MatchService{
-		repo: repo,
+		repo:       repo,
+		repoPerfil: repoPerfil,
+		repoSessao: repoSessao,
 	}
 }
 
-func (s *MatchService) GetAll() []model.Match {
-	return s.repo.FindAll()
+// calcularScore compara os campos de um Perfil e uma Sessao.
+// Critérios e pontuações:
+//   - Mesma disciplina  → 40 pts
+//   - Mesmo nível       → 30 pts
+//   - Mesmo estilo      → 30 pts
+//     Total máximo: 100 pts  |  Aprovado se score >= 60
+func calcularScore(p model.Perfil, s model.Sessao) int {
+	score := 0
+	if strings.EqualFold(p.Disciplina, s.Disciplina) {
+		score += 40
+	}
+	if strings.EqualFold(p.Nivel, s.Nivel) {
+		score += 30
+	}
+	if strings.EqualFold(p.Estilo, s.Estilo) {
+		score += 30
+	}
+	return score
 }
 
-func (s *MatchService) Create(match model.Match) model.Match {
-	return s.repo.Save(match)
+// Create recebe um Match com PerfilID e SessaoID, calcula o score,
+// define Aprovado e persiste o resultado.
+func (s *MatchService) Create(match model.Match) (model.Match, error) {
+	perfil, okP := s.repoPerfil.FindByID(match.PerfilID)
+	if !okP {
+		return model.Match{}, &NotFoundError{"perfil", match.PerfilID}
+	}
+
+	sessao, okS := s.repoSessao.FindByID(match.SessaoID)
+	if !okS {
+		return model.Match{}, &NotFoundError{"sessao", match.SessaoID}
+	}
+
+	match.Score = calcularScore(perfil, sessao)
+	match.Aprovado = match.Score >= 60
+
+	return s.repo.Save(match), nil
+}
+
+// GetByPerfilID retorna todos os matches aprovados de um perfil.
+func (s *MatchService) GetByPerfilID(perfilID int) ([]model.Match, error) {
+	_, ok := s.repoPerfil.FindByID(perfilID)
+	if !ok {
+		return nil, &NotFoundError{"perfil", perfilID}
+	}
+	return s.repo.FindByPerfilID(perfilID), nil
+}
+
+// ---------- Erro customizado ----------
+
+type NotFoundError struct {
+	Entidade string
+	ID       int
+}
+
+func (e *NotFoundError) Error() string {
+	return e.Entidade + " não encontrado(a)"
 }

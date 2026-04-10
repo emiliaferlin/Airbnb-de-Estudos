@@ -18,6 +18,15 @@ func (r *PerfilRepository) FindAll() []model.Perfil {
 	return r.perfis
 }
 
+func (r *PerfilRepository) FindByID(id int) (model.Perfil, bool) {
+	for _, p := range r.perfis {
+		if p.ID == id {
+			return p, true
+		}
+	}
+	return model.Perfil{}, false
+}
+
 func (r *PerfilRepository) Save(perfil model.Perfil) model.Perfil {
 	perfil.ID = len(r.perfis) + 1
 	r.perfis = append(r.perfis, perfil)
@@ -32,7 +41,6 @@ func (r *PerfilRepository) Updat(id int, perfil model.Perfil) model.Perfil {
 			r.perfis[i].Nivel = perfil.Nivel
 			r.perfis[i].Disciplina = perfil.Disciplina
 			r.perfis[i].Estilo = perfil.Estilo
-
 			return r.perfis[i]
 		}
 	}
@@ -49,6 +57,8 @@ func (r *PerfilRepository) Delet(id int) []model.Perfil {
 	return []model.Perfil{}
 }
 
+// ---------- Sessao ----------
+
 type SessaoRepository struct {
 	sessoes []model.Sessao
 }
@@ -61,6 +71,15 @@ func NewSessaoRepository() *SessaoRepository {
 
 func (r *SessaoRepository) FindAll() []model.Sessao {
 	return r.sessoes
+}
+
+func (r *SessaoRepository) FindByID(id int) (model.Sessao, bool) {
+	for _, s := range r.sessoes {
+		if s.ID == id {
+			return s, true
+		}
+	}
+	return model.Sessao{}, false
 }
 
 func (r *SessaoRepository) Save(sessao model.Sessao) model.Sessao {
@@ -79,7 +98,6 @@ func (r *SessaoRepository) Updat(id int, sessao model.Sessao) model.Sessao {
 			r.sessoes[i].Disciplina = sessao.Disciplina
 			r.sessoes[i].Estilo = sessao.Estilo
 			r.sessoes[i].Vagas = sessao.Vagas
-
 			return r.sessoes[i]
 		}
 	}
@@ -96,6 +114,8 @@ func (r *SessaoRepository) Delet(id int) []model.Sessao {
 	return []model.Sessao{}
 }
 
+// ---------- Match ----------
+
 type MatchRepository struct {
 	matchs []model.Match
 }
@@ -108,6 +128,17 @@ func NewMatchRepository() *MatchRepository {
 
 func (r *MatchRepository) FindAll() []model.Match {
 	return r.matchs
+}
+
+// FindByPerfilID retorna apenas os matches aprovados de um perfil específico
+func (r *MatchRepository) FindByPerfilID(perfilID int) []model.Match {
+	var resultado []model.Match
+	for _, m := range r.matchs {
+		if m.PerfilID == perfilID && m.Aprovado {
+			resultado = append(resultado, m)
+		}
+	}
+	return resultado
 }
 
 func (r *MatchRepository) Save(match model.Match) model.Match {
