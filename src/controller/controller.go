@@ -181,3 +181,43 @@ func (mc *MatchController) GetMatchesByPerfil(c *gin.Context) {
 
 	c.JSON(http.StatusOK, matches)
 }
+
+type AuthController struct {
+	service *service.UsuarioService
+}
+
+func NewAuthController(service *service.UsuarioService) *AuthController {
+	return &AuthController{service: service}
+}
+
+func (ac *AuthController) Register(c *gin.Context) {
+	var req model.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erro": err.Error()})
+		return
+	}
+
+	usuario, err := ac.service.Register(req.Email, req.Senha)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erro": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"mensagem": "Usuário criado!", "id": usuario.ID})
+}
+
+func (ac *AuthController) Login(c *gin.Context) {
+	var req model.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erro": err.Error()})
+		return
+	}
+
+	token, err := ac.service.Login(req.Email, req.Senha)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"erro": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, model.LoginResponse{Token: token})
+}

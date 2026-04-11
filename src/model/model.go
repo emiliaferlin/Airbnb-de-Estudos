@@ -3,6 +3,21 @@ package model
 // As tags bson mapeiam os campos Go para os campos do MongoDB.
 // O campo ID usa "_id" que é a chave primária padrão do MongoDB.
 
+type Usuario struct {
+	ID    int    `json:"id"    bson:"_id"`
+	Email string `json:"email" bson:"email"`
+	Senha string `json:"senha" bson:"senha"` // vai guardar o hash bcrypt
+}
+
+type LoginRequest struct {
+	Email string `json:"email"`
+	Senha string `json:"senha"`
+}
+
+type LoginResponse struct {
+	Token string `json:"token"`
+}
+
 type Perfil struct {
 	ID         int    `json:"id"         bson:"_id"`
 	Nome       string `json:"nome"       bson:"nome"`

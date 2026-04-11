@@ -9,21 +9,54 @@ import (
 )
 
 // Seed insere dados de exemplo nas coleções caso elas estejam vazias.
-// Garante que toda execução do servidor tenha dados prontos para demonstração.
 func Seed() {
 	seedPerfis()
 	seedSessoes()
 	seedMatches()
+	seedUsuarios()
+}
+
+func seedUsuarios() {
+	col := GetCollection("usuarios")
+	c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	count, _ := col.CountDocuments(c, bson.D{})
+	if count > 0 {
+		return
+	}
+
+	// Hash bcrypt de "senha123" com cost 10
+	// Gerado com: bcrypt.GenerateFromPassword([]byte("senha123"), bcrypt.DefaultCost)
+	usuarios := []interface{}{
+		bson.D{
+			{Key: "_id", Value: 1},
+			{Key: "email", Value: "admin@match.com"},
+			{Key: "senha", Value: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"},
+		},
+		bson.D{
+			{Key: "_id", Value: 2},
+			{Key: "email", Value: "emilia@match.com"},
+			{Key: "senha", Value: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"},
+		},
+	}
+
+	_, err := col.InsertMany(c, usuarios)
+	if err != nil {
+		log.Printf("Seed usuarios: %v", err)
+		return
+	}
+	log.Println("Seed: 2 usuários inseridos (senha: senha123)")
 }
 
 func seedPerfis() {
 	col := GetCollection("perfis")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	count, _ := col.CountDocuments(ctx, bson.D{})
+	count, _ := col.CountDocuments(c, bson.D{})
 	if count > 0 {
-		return // já populado
+		return
 	}
 
 	perfis := []interface{}{
@@ -69,7 +102,7 @@ func seedPerfis() {
 		},
 	}
 
-	_, err := col.InsertMany(ctx, perfis)
+	_, err := col.InsertMany(c, perfis)
 	if err != nil {
 		log.Printf("Seed perfis: %v", err)
 		return
@@ -79,10 +112,10 @@ func seedPerfis() {
 
 func seedSessoes() {
 	col := GetCollection("sessoes")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	count, _ := col.CountDocuments(ctx, bson.D{})
+	count, _ := col.CountDocuments(c, bson.D{})
 	if count > 0 {
 		return
 	}
@@ -140,7 +173,7 @@ func seedSessoes() {
 		},
 	}
 
-	_, err := col.InsertMany(ctx, sessoes)
+	_, err := col.InsertMany(c, sessoes)
 	if err != nil {
 		log.Printf("Seed sessoes: %v", err)
 		return
@@ -150,67 +183,24 @@ func seedSessoes() {
 
 func seedMatches() {
 	col := GetCollection("matches")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	count, _ := col.CountDocuments(ctx, bson.D{})
+	count, _ := col.CountDocuments(c, bson.D{})
 	if count > 0 {
 		return
 	}
 
-	// Matches pré-calculados para demonstração:
-	// Ana (perfil 1) x Revisão de Algoritmos (sessão 1): disciplina✓ nível✓ estilo✓ = 100 → aprovado
-	// Ana (perfil 1) x SQL Avançado (sessão 2):          disciplina✗ nível✗ estilo✗ = 0   → reprovado
-	// Bruno (perfil 2) x SQL Avançado (sessão 2):        disciplina✓ nível✓ estilo✓ = 100 → aprovado
-	// Carla (perfil 3) x Revisão de Algoritmos (sessão 1): disciplina✓ nível✓ estilo✓ = 100 → aprovado
-	// Diego (perfil 4) x Fundamentos de Redes (sessão 3): disciplina✓ nível✓ estilo✓ = 100 → aprovado
-	// Emilia (perfil 5) x NoSQL e MongoDB (sessão 5):    disciplina✓ nível✓ estilo✓ = 100 → aprovado
 	matches := []interface{}{
-		bson.D{
-			{Key: "_id", Value: 1},
-			{Key: "perfilId", Value: 1},
-			{Key: "sessaoId", Value: 1},
-			{Key: "score", Value: 100},
-			{Key: "aprovado", Value: true},
-		},
-		bson.D{
-			{Key: "_id", Value: 2},
-			{Key: "perfilId", Value: 1},
-			{Key: "sessaoId", Value: 2},
-			{Key: "score", Value: 0},
-			{Key: "aprovado", Value: false},
-		},
-		bson.D{
-			{Key: "_id", Value: 3},
-			{Key: "perfilId", Value: 2},
-			{Key: "sessaoId", Value: 2},
-			{Key: "score", Value: 100},
-			{Key: "aprovado", Value: true},
-		},
-		bson.D{
-			{Key: "_id", Value: 4},
-			{Key: "perfilId", Value: 3},
-			{Key: "sessaoId", Value: 1},
-			{Key: "score", Value: 100},
-			{Key: "aprovado", Value: true},
-		},
-		bson.D{
-			{Key: "_id", Value: 5},
-			{Key: "perfilId", Value: 4},
-			{Key: "sessaoId", Value: 3},
-			{Key: "score", Value: 100},
-			{Key: "aprovado", Value: true},
-		},
-		bson.D{
-			{Key: "_id", Value: 6},
-			{Key: "perfilId", Value: 5},
-			{Key: "sessaoId", Value: 5},
-			{Key: "score", Value: 100},
-			{Key: "aprovado", Value: true},
-		},
+		bson.D{{Key: "_id", Value: 1}, {Key: "perfilId", Value: 1}, {Key: "sessaoId", Value: 1}, {Key: "score", Value: 100}, {Key: "aprovado", Value: true}},
+		bson.D{{Key: "_id", Value: 2}, {Key: "perfilId", Value: 1}, {Key: "sessaoId", Value: 2}, {Key: "score", Value: 0}, {Key: "aprovado", Value: false}},
+		bson.D{{Key: "_id", Value: 3}, {Key: "perfilId", Value: 2}, {Key: "sessaoId", Value: 2}, {Key: "score", Value: 100}, {Key: "aprovado", Value: true}},
+		bson.D{{Key: "_id", Value: 4}, {Key: "perfilId", Value: 3}, {Key: "sessaoId", Value: 1}, {Key: "score", Value: 100}, {Key: "aprovado", Value: true}},
+		bson.D{{Key: "_id", Value: 5}, {Key: "perfilId", Value: 4}, {Key: "sessaoId", Value: 3}, {Key: "score", Value: 100}, {Key: "aprovado", Value: true}},
+		bson.D{{Key: "_id", Value: 6}, {Key: "perfilId", Value: 5}, {Key: "sessaoId", Value: 5}, {Key: "score", Value: 100}, {Key: "aprovado", Value: true}},
 	}
 
-	_, err := col.InsertMany(ctx, matches)
+	_, err := col.InsertMany(c, matches)
 	if err != nil {
 		log.Printf("Seed matches: %v", err)
 		return

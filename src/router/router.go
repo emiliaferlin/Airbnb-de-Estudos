@@ -2,6 +2,7 @@ package router
 
 import (
 	"match-dos-estudos/src/controller"
+	"match-dos-estudos/src/middleware"
 	"match-dos-estudos/src/repository"
 	"match-dos-estudos/src/service"
 
@@ -17,32 +18,42 @@ func SetupRouter() *gin.Engine {
 	repoPerfil := repository.NewPerfilRepository()
 	repoSessao := repository.NewSessaoRepository()
 	repoMatch := repository.NewMatchRepository()
+	repoAuth := repository.NewUsuarioRepository()
 
 	// Services
 	servicePerfil := service.NewPerfilService(repoPerfil)
 	serviceSessao := service.NewSessaoService(repoSessao)
-	// MatchService recebe os três repos para calcular o score internamente
 	serviceMatch := service.NewMatchService(repoMatch, repoPerfil, repoSessao)
+	serviceAuth := service.NewUsuarioService(repoAuth) // ← completar aqui
 
 	// Controllers
 	controllerPerfil := controller.NewPerfilController(servicePerfil)
 	controllerSessao := controller.NewSessaoController(serviceSessao)
 	controllerMatch := controller.NewMatchController(serviceMatch)
+	controllerAuth := controller.NewAuthController(serviceAuth) // ← adicionar aqui
 
-	// PERFIL
+	// Rotas públicas
+	r.POST("/login", controllerAuth.Login)
+	r.POST("/register", controllerAuth.Register)
+
+	// Rotas protegidas
+	protegidas := r.Group("/")
+	protegidas.Use(middleware.AuthMiddleware())
+	{
+		protegidas.POST("/perfis", controllerPerfil.CreatePerfil)
+		protegidas.PUT("/perfis/:id", controllerPerfil.UpdatePerfil)
+		protegidas.DELETE("/perfis/:id", controllerPerfil.DeletePerfil)
+
+		protegidas.POST("/sessoes", controllerSessao.CreateSessao)
+		protegidas.PUT("/sessoes/:id", controllerSessao.UpdateSessao)
+		protegidas.DELETE("/sessoes/:id", controllerSessao.DeleteSessao)
+
+		protegidas.POST("/matches", controllerMatch.CreateMatch)
+	}
+
+	// Rotas de leitura abertas
 	r.GET("/perfis", controllerPerfil.GetPerfis)
-	r.POST("/perfis", controllerPerfil.CreatePerfil)
-	r.PUT("/perfis/:id", controllerPerfil.UpdatePerfil)
-	r.DELETE("/perfis/:id", controllerPerfil.DeletePerfil)
-
-	// SESSOES
 	r.GET("/sessoes", controllerSessao.GetSessao)
-	r.POST("/sessoes", controllerSessao.CreateSessao)
-	r.PUT("/sessoes/:id", controllerSessao.UpdateSessao)
-	r.DELETE("/sessoes/:id", controllerSessao.DeleteSessao)
-
-	// MATCH
-	r.POST("/matches", controllerMatch.CreateMatch)
 	r.GET("/perfis/:id/matches", controllerMatch.GetMatchesByPerfil)
 
 	return r

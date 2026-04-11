@@ -281,3 +281,32 @@ func (r *MatchRepository) Save(match model.Match) model.Match {
 	_, _ = r.col.InsertOne(c, match)
 	return match
 }
+
+type UsuarioRepository struct {
+	col *mongo.Collection
+}
+
+func NewUsuarioRepository() *UsuarioRepository {
+	return &UsuarioRepository{col: database.GetCollection("usuarios")}
+}
+
+func (r *UsuarioRepository) FindByEmail(email string) (model.Usuario, bool) {
+	c, cancel := ctx()
+	defer cancel()
+
+	var u model.Usuario
+	err := r.col.FindOne(c, bson.D{{Key: "email", Value: email}}).Decode(&u)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return model.Usuario{}, false
+	}
+	return u, err == nil
+}
+
+func (r *UsuarioRepository) Save(usuario model.Usuario) model.Usuario {
+	c, cancel := ctx()
+	defer cancel()
+
+	usuario.ID = nextID(r.col)
+	_, _ = r.col.InsertOne(c, usuario)
+	return usuario
+}
