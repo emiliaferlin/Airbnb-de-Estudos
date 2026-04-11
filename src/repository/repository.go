@@ -31,8 +31,16 @@ func nextID(col *mongo.Collection) int {
 	if err := col.FindOne(c, bson.D{}, opts).Decode(&result); err != nil {
 		return 1
 	}
-	id, _ := result["_id"].(int32)
-	return int(id) + 1
+	switch v := result["_id"].(type) {
+	case int32:
+		return int(v) + 1
+	case int64:
+		return int(v) + 1
+	case float64:
+		return int(v) + 1
+	default:
+		return 1
+	}
 }
 
 // ================================================================

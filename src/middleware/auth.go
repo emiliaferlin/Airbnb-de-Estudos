@@ -29,3 +29,16 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func ErrorHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) > 0 {
+			err := c.Errors.Last()
+			c.JSON(500, gin.H{
+				"erro":    "erro interno",
+				"detalhe": err.Error(),
+			})
+		}
+	}
+}

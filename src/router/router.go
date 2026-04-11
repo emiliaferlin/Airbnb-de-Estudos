@@ -17,6 +17,7 @@ import (
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
+	r.Use(middleware.ErrorHandler())
 
 	// Repositórios
 	repoPerfil := repository.NewPerfilRepository()

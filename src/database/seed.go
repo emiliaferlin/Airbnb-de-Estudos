@@ -32,12 +32,12 @@ func seedUsuarios() {
 		bson.D{
 			{Key: "_id", Value: 1},
 			{Key: "email", Value: "admin@match.com"},
-			{Key: "senha", Value: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"},
+			{Key: "senha", Value: "$2a$10$xip4qQ18b8aADGA.WDr/2emLiDVZ6bcow0FQhJAg8fy/PfYY5IwBa"},
 		},
 		bson.D{
 			{Key: "_id", Value: 2},
 			{Key: "email", Value: "emilia@match.com"},
-			{Key: "senha", Value: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"},
+			{Key: "senha", Value: "$2a$10$xip4qQ18b8aADGA.WDr/2emLiDVZ6bcow0FQhJAg8fy/PfYY5IwBa"},
 		},
 	}
 
