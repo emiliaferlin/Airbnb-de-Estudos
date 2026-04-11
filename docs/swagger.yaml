@@ -1,0 +1,443 @@
+basePath: /
+definitions:
+  model.LoginRequest:
+    properties:
+      email:
+        type: string
+      senha:
+        type: string
+    type: object
+  model.LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  model.Match:
+    properties:
+      aprovado:
+        type: boolean
+      id:
+        type: integer
+      perfilId:
+        type: integer
+      score:
+        type: integer
+      sessaoId:
+        type: integer
+    type: object
+  model.Perfil:
+    properties:
+      disciplina:
+        type: string
+      estilo:
+        description: mais silencioso | gosta de argumentar
+        type: string
+      id:
+        type: integer
+      idade:
+        type: integer
+      nivel:
+        description: sem conhecimento | conhecimento médio | conhecimento alto
+        type: string
+      nome:
+        type: string
+    type: object
+  model.Sessao:
+    properties:
+      dataHoraInicio:
+        type: string
+      disciplina:
+        type: string
+      duracaoMinutos:
+        type: integer
+      estilo:
+        type: string
+      id:
+        type: integer
+      nivel:
+        type: string
+      titulo:
+        type: string
+      vagas:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API REST para match de estudantes com sessões de estudo
+  title: Match dos Estudos API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Email e senha
+        in: body
+        name: credenciais
+        required: true
+        schema:
+          $ref: '#/definitions/model.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Autentica um usuário e retorna o token JWT
+      tags:
+      - auth
+  /matches:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: perfilId e sessaoId
+        in: body
+        name: match
+        required: true
+        schema:
+          $ref: '#/definitions/model.Match'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Match'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Calcula o match entre um perfil e uma sessão
+      tags:
+      - matches
+  /perfis:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Perfil'
+            type: array
+      summary: Lista todos os perfis
+      tags:
+      - perfis
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Dados do perfil
+        in: body
+        name: perfil
+        required: true
+        schema:
+          $ref: '#/definitions/model.Perfil'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Cria um novo perfil
+      tags:
+      - perfis
+  /perfis/{id}:
+    delete:
+      parameters:
+      - description: ID do perfil
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Remove um perfil
+      tags:
+      - perfis
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID do perfil
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Dados atualizados
+        in: body
+        name: perfil
+        required: true
+        schema:
+          $ref: '#/definitions/model.Perfil'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Atualiza um perfil existente
+      tags:
+      - perfis
+  /perfis/{id}/matches:
+    get:
+      parameters:
+      - description: ID do perfil
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Match'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Lista os matches aprovados de um perfil
+      tags:
+      - matches
+  /register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Email e senha
+        in: body
+        name: usuario
+        required: true
+        schema:
+          $ref: '#/definitions/model.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Cria um novo usuário
+      tags:
+      - auth
+  /sessoes:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Sessao'
+            type: array
+      summary: Lista todas as sessões
+      tags:
+      - sessoes
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Dados da sessão
+        in: body
+        name: sessao
+        required: true
+        schema:
+          $ref: '#/definitions/model.Sessao'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Cria uma nova sessão
+      tags:
+      - sessoes
+  /sessoes/{id}:
+    delete:
+      parameters:
+      - description: ID da sessão
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Remove uma sessão
+      tags:
+      - sessoes
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID da sessão
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Dados atualizados
+        in: body
+        name: sessao
+        required: true
+        schema:
+          $ref: '#/definitions/model.Sessao'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Atualiza uma sessão existente
+      tags:
+      - sessoes
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

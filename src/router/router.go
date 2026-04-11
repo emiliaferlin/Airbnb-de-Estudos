@@ -6,7 +6,11 @@ import (
 	"match-dos-estudos/src/repository"
 	"match-dos-estudos/src/service"
 
+	_ "match-dos-estudos/docs"
+
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // Router → Controller → Service → Repository
@@ -55,6 +59,8 @@ func SetupRouter() *gin.Engine {
 	r.GET("/perfis", controllerPerfil.GetPerfis)
 	r.GET("/sessoes", controllerSessao.GetSessao)
 	r.GET("/perfis/:id/matches", controllerMatch.GetMatchesByPerfil)
+
+	r.GET("/api-docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return r
 }
