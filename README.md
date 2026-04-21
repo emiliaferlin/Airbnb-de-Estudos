@@ -323,6 +323,11 @@ curl -X POST http://localhost:8080/matches \
 curl http://localhost:8080/perfis/1/matches
 ```
 
+<img width="1402" height="735" alt="image" src="https://github.com/user-attachments/assets/89585602-ca41-4c51-aeea-c17a9ae47159" />
+<img width="1401" height="810" alt="image" src="https://github.com/user-attachments/assets/eaee8129-8bdb-4424-adc8-9bca68e83b06" />
+<img width="1412" height="722" alt="image" src="https://github.com/user-attachments/assets/eff121c0-aa86-4c36-9b27-a0507432c829" />
+<img width="1375" height="773" alt="image" src="https://github.com/user-attachments/assets/0ff31747-6518-4f7c-83cb-2ffead99686a" />
+
 ---
 
 ## 9. Pesquisa e Contextualização
@@ -333,11 +338,7 @@ A aprendizagem colaborativa é amplamente reconhecida na literatura educacional 
 
 Contudo, a formação espontânea de grupos esbarra em um problema prático: a dificuldade de encontrar parceiros com perfis compatíveis. Incompatibilidades de nível (avançado com iniciante) ou de estilo (silencioso com debatedor) comprometem a experiência de todos.
 
-### 9.2 Matchmaking Aplicado à Educação
-
-Sistemas de _matchmaking_ — algoritmos de compatibilidade — são amplamente usados em recrutamento (LinkedIn), relacionamentos (Tinder) e jogos online. O princípio é atribuir pesos a critérios relevantes e calcular uma pontuação. Aqui, o algoritmo foi adaptado para o domínio educacional com três critérios: disciplina, nível e estilo. O threshold de 60 pontos exige compatibilidade em pelo menos dois dos três critérios, filtrando matches superficiais.
-
-### 9.3 Escolha Tecnológica
+### 9.2 Escolha Tecnológica
 
 **Go + Gin**: compilação nativa com alto throughput, tipagem estática e framework HTTP eficiente, adequado para APIs REST com múltiplas requisições simultâneas.
 
@@ -351,5 +352,3 @@ A arquitetura em camadas (Router → Controller → Service → Repository) isol
 
 - Endpoint de sugestão automática: dado um `perfilId`, retornar as sessões com maior score
 - Critério adicional de compatibilidade de horário
-- Notificação ao criador da sessão quando um match aprovado ocorrer
-- Refresh token para renovação automática da sessão
