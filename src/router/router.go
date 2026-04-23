@@ -14,6 +14,10 @@ import (
 )
 
 // Router → Controller → Service → Repository
+// Router → pra onde vai
+// Controller → recebe e responde
+// Service → pensa
+// Repository → fala com o banco
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
